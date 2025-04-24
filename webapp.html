@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Cherry Blossom Snake Game</title>
+  <style>
+    body {
+      margin: 0;
+      padding-top: 80px; /* leave space for header */
+      background: url('https://images.unsplash.com/photo-1559058733-190d5c15f3d1?auto=format&fit=crop&w=1350&q=80') no-repeat center center fixed;
+      background-size: cover;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+      color: #fff;
+    }
+
+    /* Header tabs */
+    .header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      background-color: rgba(255, 228, 237, 0.9);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 60px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      z-index: 1000;
+    }
+
+    .tab {
+      margin: 0 20px;
+      text-decoration: none;
+      font-size: 1.1rem;
+      color: #d6336c;
+      padding: 10px 20px;
+      border-radius: 10px;
+      background-color: #fff0f5;
+      transition: background-color 0.3s;
+    }
+
+    .tab:hover {
+      background-color: #ffe3ed;
+    }
+
+    h1 {
+      margin-top: 20px;
+      font-size: 2.5rem;
+      color: #ffb7c5;
+      text-shadow: 1px 1px 4px #444;
+    }
+
+    canvas {
+      border: 4px solid #ffb7c5;
+      background-color: rgba(255, 255, 255, 0.8);
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(255, 183, 197, 0.8);
+      display: none;
+    }
+
+    .instructions {
+      margin: 10px;
+      color: #44212c;
+      background-color: rgba(255, 182, 193, 0.4);
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 1rem;
+      display: none;
+    }
+
+    .button {
+      margin: 10px;
+      padding: 10px 25px;
+      font-size: 1rem;
+      background-color: #ffb7c5;
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(255, 183, 197, 0.8);
+      transition: background-color 0.3s;
+    }
+
+    .button:hover {
+      background-color: #ffa3b5;
+    }
+
+    #restartBtn {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header with tabs -->
+  <div class="header">
+    <a class="tab" href="/Users/rental/Downloads/startbootstrap-clean-blog-gh-pages/index.html">Professional Pages</a>
+    <a class="tab" href="index.html">Scratch Page</a>
+  </div>
+
+  <h1>🌸 Cherry Blossom Snake 🌸</h1>
+
+  <button id="startBtn" class="button">Start Game</button>
+  <canvas id="gameCanvas" width="400" height="400"></canvas>
+  <div class="instructions" id="instructions">Use arrow keys to move the snake</div>
+  <button id="restartBtn" class="button">Restart Game</button>
+
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    const startBtn = document.getElementById("startBtn");
+    const restartBtn = document.getElementById("restartBtn");
+    const instructions = document.getElementById("instructions");
+
+    const box = 20;
+    const canvasSize = 20;
+    let snake, direction, food, gameLoop, gameOver;
+
+    document.addEventListener("keydown", changeDirection);
+
+    startBtn.addEventListener("click", () => {
+      startBtn.style.display = "none";
+      canvas.style.display = "block";
+      instructions.style.display = "block";
+      startGame();
+    });
+
+    restartBtn.addEventListener("click", () => {
+      restartBtn.style.display = "none";
+      startGame();
+    });
+
+    function startGame() {
+      snake = [{ x: 9 * box, y: 9 * box }];
+      direction = "RIGHT";
+      gameOver = false;
+      food = {
+        x: Math.floor(Math.random() * canvasSize) * box,
+        y: Math.floor(Math.random() * canvasSize) * box
+      };
+
+      clearInterval(gameLoop);
+      gameLoop = setInterval(draw, 120);
+    }
+
+    function changeDirection(event) {
+      if (event.key === "ArrowLeft" && direction !== "RIGHT") direction = "LEFT";
+      if (event.key === "ArrowUp" && direction !== "DOWN") direction = "UP";
+      if (event.key === "ArrowRight" && direction !== "LEFT") direction = "RIGHT";
+      if (event.key === "ArrowDown" && direction !== "UP") direction = "DOWN";
+    }
+
+    function draw() {
+      if (gameOver) return;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Draw food
+      ctx.fillStyle = "#ff69b4";
+      ctx.fillRect(food.x, food.y, box, box);
+
+      // Draw snake
+      for (let i = 0; i < snake.length; i++) {
+        ctx.fillStyle = i === 0 ? "#ffb6c1" : "#ffc0cb";
+        ctx.fillRect(snake[i].x, snake[i].y, box, box);
+      }
+
+      // Move snake
+      let headX = snake[0].x;
+      let headY = snake[0].y;
+
+      if (direction === "LEFT") headX -= box;
+      if (direction === "UP") headY -= box;
+      if (direction === "RIGHT") headX += box;
+      if (direction === "DOWN") headY += box;
+
+      // Check collision with wall or self
+      if (
+        headX < 0 || headX >= canvas.width || headY < 0 || headY >= canvas.height ||
+        snake.some((segment, index) => index !== 0 && segment.x === headX && segment.y === headY)
+      ) {
+        gameOver = true;
+        clearInterval(gameLoop);
+        restartBtn.style.display = "inline-block";
+        return;
+      }
+
+      // Eat food or move
+      let newHead;
+      if (headX === food.x && headY === food.y) {
+        newHead = { x: headX, y: headY };
+        food = {
+          x: Math.floor(Math.random() * canvasSize) * box,
+          y: Math.floor(Math.random() * canvasSize) * box
+        };
+      } else {
+        newHead = { x: headX, y: headY };
+        snake.pop();
+      }
+
+      snake.unshift(newHead);
+    }
+  </script>
+
+</body>
+</html>
